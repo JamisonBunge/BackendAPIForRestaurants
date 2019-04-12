@@ -24,15 +24,13 @@ class MenuSelection(Resource):
     
     def post(self,id):
         try:
-            name = request.json['name']
+            name = request.json['name'] #GRAB THE NAME FEILD FROM THE JSON REQUEST
             getFromDataBase(id) #if the ID is not the database, this will throw 
             updateInDataBase(id,name)
-            print("1")
             MenuSelectionX = [{
                 "id" : id,
                 "name" : name
                 }]
-            print("2")
 
             return jsonify({"success": True, "MenuSection" : MenuSelectionX})
         except:
@@ -54,10 +52,11 @@ class AllSections(Resource):
         try:
             dbResponse = getAllFromDataBase()
             MenuSelectionX = []
-            for x in dbResponse:
+            #DbResponse WILL CONTAIN ALL ENTRIES IN THE DATABASE, SO LOOP THROUGH AND APPEND TO THE OUTPUT VARIABLE MenuSelectionX
+            for entry in dbResponse:
                 MenuSelectionX.append({
-                    "id" : x[0], #this is the same as the passed ID value
-                    "name" : x[1]
+                    "id" : entry[0], #this is the same as the passed ID value
+                    "name" : entry[1]
                     })
 
             return jsonify({"success": True, "MenuSection" : MenuSelectionX})
@@ -82,74 +81,61 @@ class AllSections(Resource):
 
 
 
-
-api.add_resource(MenuSelection, "/menusection/<int:id>")
-api.add_resource(AllSections, "/menusection")
-# api.add_resource(Multi, '/multi/<int:num>')
-
+#DEFINE API ROUTES
+api.add_resource(MenuSelection, "/menusection/<int:id>") #USE THIS API WHEN ADDRESSING A GIVEN ID 
+api.add_resource(AllSections, "/menusection")            #USE THIS API WHEN AN ID IS NOT APPROPRIATE 
 
 
+#DATABASE INTERACTIONS
 def create_table():
-        conn = sqlite3.connect("Menu.db") #connection
-        c = conn.cursor() # cursor
-        c.execute('CREATE TABLE IF NOT EXISTS MenuSections(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)')
+        conn = sqlite3.connect("Menu.db") #CONNECT TO THE DATABASE
+        c = conn.cursor() #CURSOR
+        c.execute('CREATE TABLE IF NOT EXISTS MenuSections(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)') #SQL CREATE TABLE STATMENT 
         c.close()
         conn.close()
 
 
-
-
-
 def putInDataBase(name):
-    conn = sqlite3.connect("Menu.db") #connection
+    conn = sqlite3.connect("Menu.db") 
     c = conn.cursor()
-    c.execute("INSERT INTO MenuSections (name) VALUES(?)",(name,))
+    c.execute("INSERT INTO MenuSections (name) VALUES(?)",(name,))  #SQL INSERT STATEMENT
     c.execute("select last_insert_rowid()")
-    newID = c.fetchall()[0][0]
-    #print(newID[0][0])
+    newID = c.fetchall()[0][0]  #GRAB THE NEW ID TO RETURN TO THE CLIENT 
     conn.commit()
     c.close()
     conn.close()
     return newID
 
 def updateInDataBase(id,name):
-    conn = sqlite3.connect("Menu.db") #connection
+    conn = sqlite3.connect("Menu.db") 
     c = conn.cursor()
-    c.execute("Update MenuSections SET name=(?) WHERE id= (?)",(name,id,))
+    c.execute("Update MenuSections SET name=(?) WHERE id= (?)",(name,id,)) #SQL UPDATE ROW STATEMENT
     conn.commit()
     c.close()
     conn.close()
     
 
 def deleteFromDataBase(id):
-    conn = sqlite3.connect("Menu.db") #connection
+    conn = sqlite3.connect("Menu.db") 
     c = conn.cursor()
-    c.execute("DELETE FROM MenuSections WHERE id=(?)",(id,))
+    c.execute("DELETE FROM MenuSections WHERE id=(?)",(id,)) #SQL DELETE STATMENT
     conn.commit()
     
-
-    
-
 def getFromDataBase(id):
-    conn = sqlite3.connect("Menu.db") #connection
+    conn = sqlite3.connect("Menu.db") 
     c = conn.cursor()
-    c.execute("SELECT * FROM MenuSections WHERE id=(?)",(id,))
+    c.execute("SELECT * FROM MenuSections WHERE id=(?)",(id,)) #SQL SELECT STATMENT
     return c.fetchall()[0]
 
 def getAllFromDataBase():
-
-    conn = sqlite3.connect("Menu.db") #connection
+    conn = sqlite3.connect("Menu.db") 
     c = conn.cursor()
-    c.execute("SELECT * FROM MenuSections")
+    c.execute("SELECT * FROM MenuSections") #SQL SELECT ALL STATMENT
     return c.fetchall()
     
-    
 
-    
-
-
+#CREATE TABLE IF NEEDED ON LAUNCH OF THE CLIENT 
 create_table()
-#data_entry()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True) 
